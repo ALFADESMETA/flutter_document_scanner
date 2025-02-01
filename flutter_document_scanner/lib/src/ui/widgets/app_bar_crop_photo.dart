@@ -27,40 +27,68 @@ class AppBarCropPhoto extends StatelessWidget {
     }
 
     return Positioned(
-      top: 0,
+      bottom: MediaQuery.of(context).padding.bottom + 30, // Position from bottom
       left: 0,
       right: 0,
       child: Padding(
-        padding: EdgeInsets.only(
-          top: MediaQuery.of(context).padding.top + 15,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            IconButton(
-              onPressed: () =>
-                  context.read<DocumentScannerController>().changePage(
-                        AppPages.takePhoto,
-                      ),
-              icon: const Icon(
-                Icons.close,
+            // Clear button
+            Container(
+              decoration: const BoxDecoration(
+                color: Colors.green,
+                borderRadius: BorderRadius.all(Radius.circular(24)),
               ),
-              color: Colors.white,
+              child: TextButton(
+                onPressed: () =>
+                    context.read<DocumentScannerController>().changePage(
+                          AppPages.takePhoto,
+                        ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                ),
+                child: const Text(
+                  'Clear',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
             ),
 
-            // * Crop and Save photo
-            TextButton(
-              onPressed: () {
-                // Crop the photo and then save it
-                final controller = context.read<DocumentScannerController>();
-                controller.cropPhoto();
-                controller.savePhotoDocument();
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
+            // Scan button
+            Container(
+              decoration: const BoxDecoration(
+                color: Colors.green,
+                borderRadius: BorderRadius.all(Radius.circular(24)),
               ),
-              child: Text(
-                cropPhotoDocumentStyle.textButtonSave,
+              child: TextButton(
+                onPressed: () {
+                  final controller = context.read<DocumentScannerController>();
+                  controller.cropPhoto();
+                  controller.savePhotoDocument();
+                },
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                ),
+                child: Text(
+                  cropPhotoDocumentStyle.textButtonSave,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
             ),
           ],
