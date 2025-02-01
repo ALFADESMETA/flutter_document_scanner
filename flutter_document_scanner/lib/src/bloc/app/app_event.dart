@@ -12,7 +12,6 @@ import 'package:camera/camera.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_document_scanner/src/bloc/app/app_state.dart';
 import 'package:flutter_document_scanner/src/models/area.dart';
-import 'package:flutter_document_scanner_platform_interface/flutter_document_scanner_platform_interface.dart';
 
 /// Class to create events
 abstract class AppEvent extends Equatable {}
@@ -98,7 +97,7 @@ class AppPhotoCropped extends AppEvent {
   List<Object?> get props => [];
 }
 
-/// Event to load the cropped photo in page [AppPages.editDocument]
+/// Event to load the cropped photo
 class AppLoadCroppedPhoto extends AppEvent {
   /// Create an event instance
   AppLoadCroppedPhoto({
@@ -109,7 +108,7 @@ class AppLoadCroppedPhoto extends AppEvent {
   /// Image to load
   final Uint8List image;
 
-  ///
+  /// Area of the cropped image
   final Area area;
 
   @override
@@ -119,41 +118,7 @@ class AppLoadCroppedPhoto extends AppEvent {
       ];
 }
 
-/// Event to change the filter type in page [AppPages.editDocument]
-class AppFilterApplied extends AppEvent {
-  /// Create an event instance
-  AppFilterApplied({
-    required this.filter,
-  });
-
-  /// Filter type to apply
-  ///
-  /// default: [FilterType.natural]
-  final FilterType filter;
-
-  @override
-  List<Object?> get props => [
-        filter,
-      ];
-}
-
-///
-class AppNewEditedImageLoaded extends AppEvent {
-  /// Create an event instance
-  AppNewEditedImageLoaded({
-    required this.isSuccess,
-  });
-
-  ///
-  final bool isSuccess;
-
-  @override
-  List<Object?> get props => [
-        isSuccess,
-      ];
-}
-
-///
+/// Event to start saving document
 class AppStartedSavingDocument extends AppEvent {
   /// Create an event instance
   AppStartedSavingDocument();
@@ -162,18 +127,30 @@ class AppStartedSavingDocument extends AppEvent {
   List<Object?> get props => [];
 }
 
-///
+/// Event when document is saved
 class AppDocumentSaved extends AppEvent {
   /// Create an event instance
   AppDocumentSaved({
     required this.isSuccess,
   });
 
-  ///
+  /// Whether save was successful
   final bool isSuccess;
 
   @override
   List<Object?> get props => [
         isSuccess,
       ];
+}
+
+/// Event to change flash mode
+class AppFlashModeChanged extends AppEvent {
+  /// Create an event instance
+  AppFlashModeChanged(this.mode);
+
+  /// New flash mode to set
+  final FlashMode mode;
+
+  @override
+  List<Object?> get props => [mode];
 }

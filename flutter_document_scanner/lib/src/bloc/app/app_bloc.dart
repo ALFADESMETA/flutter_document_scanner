@@ -32,96 +32,97 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     on<AppLoadCroppedPhoto>(_loadCroppedPhoto);
     on<AppStartedSavingDocument>(_startedSavingDocument);
     on<AppDocumentSaved>(_documentSaved);
+    on<AppFlashModeChanged>(_flashModeChanged);
   }
 
   final ImageUtils _imageUtils;
-
   CameraController? _cameraController;
   late XFile? _pictureTaken;
 
   /// Initialize [CameraController]
-  /// based on the parameters sent by [AppCameraInitialized]
-  ///
-  /// [AppCameraInitialized.cameraLensDirection] for [CameraLensDirection]
-  /// [AppCameraInitialized.resolutionCamera] for the [ResolutionPreset] camera
   Future<void> _cameraInitialized(
     AppCameraInitialized event,
     Emitter<AppState> emit,
   ) async {
-    emit(
-      state.copyWith(
-        statusCamera: AppStatus.loading,
-      ),
-    );
+    emit(state.copyWith(statusCamera: AppStatus.loading));
 
-    final cameras = await availableCameras();
-    final camera = cameras.firstWhere(
-      (camera) => camera.lensDirection == event.cameraLensDirection,
-      orElse: () => cameras.first,
-    );
+    try {
+      final cameras = await availableCameras();
+      final camera = cameras.firstWhere(
+        (camera) => camera.lensDirection == event.cameraLensDirection,
+        orElse: () => cameras.first,
+      );
 
-    if (_cameraController != null) {
-      await _cameraController?.dispose();
-      _cameraController = null;
-    }
+      if (_cameraController != null) {
+        await _cameraController?.dispose();
+        _cameraController = null;
+      }
 
-    _cameraController = CameraController(
-      camera,
-      event.resolutionCamera,
-      enableAudio: false,
-    );
+      _cameraController = CameraController(
+        camera,
+        event.resolutionCamera,
+        enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.jpeg,
+      );
 
-    await _cameraController!.initialize();
+      await _cameraController!.initialize();
+      await _cameraController!.setFlashMode(FlashMode.off);
 
-    emit(
-      state.copyWith(
+      emit(state.copyWith(
         statusCamera: AppStatus.success,
         cameraController: _cameraController,
-      ),
-    );
+        flashMode: FlashMode.off,
+      ));
+    } catch (e) {
+      emit(state.copyWith(statusCamera: AppStatus.failure));
+    }
+  }
+
+  /// Handle flash mode changes
+  Future<void> _flashModeChanged(
+    AppFlashModeChanged event,
+    Emitter<AppState> emit,
+  ) async {
+    if (_cameraController != null) {
+      try {
+        await _cameraController!.setFlashMode(event.mode);
+        emit(state.copyWith(flashMode: event.mode));
+      } catch (e) {
+        emit(state.copyWith(flashMode: FlashMode.off));
+      }
+    }
   }
 
   /// Take a photo with the [CameraController.takePicture]
-  ///
-  /// Then [ImageUtils.findContourPhoto] with the largest area by
-  /// [AppPhotoTaken.minContourArea] in the image
   Future<void> _photoTaken(
     AppPhotoTaken event,
     Emitter<AppState> emit,
   ) async {
-    emit(
-      state.copyWith(
-        statusTakePhotoPage: AppStatus.loading,
-      ),
-    );
+    emit(state.copyWith(statusTakePhotoPage: AppStatus.loading));
 
-    if (_cameraController == null) {
-      return;
-    }
+    if (_cameraController == null) return;
 
-    _pictureTaken = await _cameraController!.takePicture();
+    try {
+      _pictureTaken = await _cameraController!.takePicture();
 
-    final byteData = await _pictureTaken!.readAsBytes();
-    final response = await _imageUtils.findContourPhoto(
-      byteData,
-      minContourArea: event.minContourArea,
-    );
+      final byteData = await _pictureTaken!.readAsBytes();
+      final response = await _imageUtils.findContourPhoto(
+        byteData,
+        minContourArea: event.minContourArea,
+      );
 
-    final fileImage = File(_pictureTaken!.path);
+      final fileImage = File(_pictureTaken!.path);
 
-    emit(
-      state.copyWith(
+      emit(state.copyWith(
         statusTakePhotoPage: AppStatus.success,
         pictureInitial: fileImage,
         contourInitial: response,
-      ),
-    );
+      ));
 
-    emit(
-      state.copyWith(
-        currentPage: AppPages.cropPhoto,
-      ),
-    );
+      emit(state.copyWith(currentPage: AppPages.cropPhoto));
+    } catch (e) {
+      emit(state.copyWith(statusTakePhotoPage: AppStatus.failure));
+    }
   }
 
   /// Find the contour from an external image like gallery
@@ -129,114 +130,93 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     AppExternalImageContoursFound event,
     Emitter<AppState> emit,
   ) async {
-    final externalImage = event.image;
+    try {
+      final externalImage = event.image;
+      final byteData = await externalImage.readAsBytes();
+      final response = await _imageUtils.findContourPhoto(
+        byteData,
+        minContourArea: event.minContourArea,
+      );
 
-    final byteData = await externalImage.readAsBytes();
-    final response = await _imageUtils.findContourPhoto(
-      byteData,
-      minContourArea: event.minContourArea,
-    );
-
-    emit(
-      state.copyWith(
+      emit(state.copyWith(
         pictureInitial: externalImage,
         contourInitial: response,
-      ),
-    );
+      ));
 
-    emit(
-      state.copyWith(
-        currentPage: AppPages.cropPhoto,
-      ),
-    );
+      emit(state.copyWith(currentPage: AppPages.cropPhoto));
+    } catch (e) {
+      emit(state.copyWith(statusTakePhotoPage: AppStatus.failure));
+    }
   }
 
-  /// When changing the page, the state will be initialized.
+  /// When changing the page, the state will be initialized
   Future<void> _pageChanged(
     AppPageChanged event,
     Emitter<AppState> emit,
   ) async {
     switch (event.newPage) {
       case AppPages.takePhoto:
-        emit(
-          state.copyWith(
-            currentPage: event.newPage,
-            statusTakePhotoPage: AppStatus.initial,
-            statusCropPhoto: AppStatus.initial,
-            contourInitial: null,
-          ),
-        );
+        emit(state.copyWith(
+          currentPage: event.newPage,
+          statusTakePhotoPage: AppStatus.initial,
+          statusCropPhoto: AppStatus.initial,
+          contourInitial: null,
+        ));
         break;
 
       case AppPages.cropPhoto:
-        emit(
-          state.copyWith(
-            currentPage: event.newPage,
-          ),
-        );
+        emit(state.copyWith(currentPage: event.newPage));
         break;
     }
   }
 
-  /// It will change the state and
-  /// execute the event [CropPhotoByAreaCropped] to crop the image
+  /// Handle photo cropping state
   Future<void> _photoCropped(
     AppPhotoCropped event,
     Emitter<AppState> emit,
   ) async {
-    emit(
-      state.copyWith(
-        statusCropPhoto: AppStatus.loading,
-      ),
-    );
+    emit(state.copyWith(statusCropPhoto: AppStatus.loading));
   }
 
-  /// It will change the state after loading the cropped photo
+  /// Handle cropped photo loading
   Future<void> _loadCroppedPhoto(
     AppLoadCroppedPhoto event,
     Emitter<AppState> emit,
   ) async {
-    emit(
-      state.copyWith(
-        statusCropPhoto: AppStatus.success,
-        pictureCropped: event.image,
-        contourInitial: event.area,
-      ),
-    );
+    emit(state.copyWith(
+      statusCropPhoto: AppStatus.success,
+      pictureCropped: event.image,
+      contourInitial: event.area,
+    ));
 
-    // Start saving immediately after crop
     add(AppStartedSavingDocument());
   }
 
-  /// It will change the state and
-  /// validate if image is valid for saving
+  /// Start saving document
   Future<void> _startedSavingDocument(
     AppStartedSavingDocument event,
     Emitter<AppState> emit,
   ) async {
-    emit(
-      state.copyWith(
-        statusSavePhotoDocument: AppStatus.loading,
-      ),
-    );
+    emit(state.copyWith(statusSavePhotoDocument: AppStatus.loading));
   }
 
-  /// Change state after saved the document
+  /// Handle document saving completion
   Future<void> _documentSaved(
     AppDocumentSaved event,
     Emitter<AppState> emit,
   ) async {
-    emit(
-      state.copyWith(
-        statusSavePhotoDocument:
-            event.isSuccess ? AppStatus.success : AppStatus.failure,
-      ),
-    );
+    emit(state.copyWith(
+      statusSavePhotoDocument:
+          event.isSuccess ? AppStatus.success : AppStatus.failure,
+    ));
   }
 
   @override
   Future<void> close() async {
-    await _cameraController?.dispose();
+    if (_cameraController != null) {
+      await _cameraController!.setFlashMode(FlashMode.off);
+      await _cameraController?.dispose();
+    }
     return super.close();
   }
 }

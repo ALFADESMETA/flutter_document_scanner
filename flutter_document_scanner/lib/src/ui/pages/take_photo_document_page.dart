@@ -68,7 +68,9 @@ class _TakePhotoDocumentPageState extends State<TakePhotoDocumentPage> {
             );
 
           case AppStatus.failure:
-            return Container();
+            return const Center(
+              child: Text('Failed to initialize camera'),
+            );
         }
       },
     );
@@ -84,37 +86,39 @@ class _CameraPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocSelector<AppBloc, AppState, CameraController?>(
-      selector: (state) => state.cameraController,
+    return BlocBuilder<AppBloc, AppState>(
+      buildWhen: (previous, current) =>
+          current.cameraController != previous.cameraController ||
+          current.flashMode != previous.flashMode,
       builder: (context, state) {
-        if (state == null) {
+        final controller = state.cameraController;
+        if (controller == null) {
           return const Center(
-            child: Text(
-              'No Camera',
-            ),
+            child: Text('No Camera'),
           );
         }
 
         return Stack(
           fit: StackFit.expand,
           children: [
-            // * Camera
+            // Camera Preview
             Positioned(
               top: takePhotoDocumentStyle.top,
               bottom: takePhotoDocumentStyle.bottom,
               left: takePhotoDocumentStyle.left,
               right: takePhotoDocumentStyle.right,
-              child: CameraPreview(state),
+              child: CameraPreview(controller),
             ),
 
-            // * children
+            // Custom children widgets
             if (takePhotoDocumentStyle.children != null)
               ...takePhotoDocumentStyle.children!,
 
-            /// Default
-            ButtonTakePhoto(
-              takePhotoDocumentStyle: takePhotoDocumentStyle,
-            ),
+            // Default take photo button
+            if (!takePhotoDocumentStyle.hideDefaultButtonTakePicture)
+              ButtonTakePhoto(
+                takePhotoDocumentStyle: takePhotoDocumentStyle,
+              ),
           ],
         );
       },

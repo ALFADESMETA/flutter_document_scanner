@@ -9,6 +9,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:camera/camera.dart';
 import 'package:flutter_document_scanner/flutter_document_scanner.dart';
 import 'package:flutter_document_scanner/src/bloc/app/app_bloc.dart';
 import 'package:flutter_document_scanner/src/bloc/app/app_event.dart';
@@ -48,10 +49,15 @@ class DocumentScannerController {
     return _appBloc.stream.map((data) => data.currentPage).distinct();
   }
 
-  /// Will return the picture taken on the [TakePhotoDocumentPage].
+  /// Stream [FlashMode] to know the current flash mode
+  Stream<FlashMode> get flashMode {
+    return _appBloc.stream.map((data) => data.flashMode).distinct();
+  }
+
+  /// Will return the picture taken on the [TakePhotoDocumentPage]
   File? get pictureTaken => _appBloc.state.pictureInitial;
 
-  /// Will return the picture cropped on the [CropPhotoDocumentPage].
+  /// Will return the picture cropped on the [CropPhotoDocumentPage]
   Uint8List? get pictureCropped => _appBloc.state.pictureCropped;
 
   /// Taking the photo
@@ -61,11 +67,7 @@ class DocumentScannerController {
   Future<void> takePhoto({
     double? minContourArea,
   }) async {
-    _appBloc.add(
-      AppPhotoTaken(
-        minContourArea: minContourArea,
-      ),
-    );
+    _appBloc.add(AppPhotoTaken(minContourArea: minContourArea));
   }
 
   /// Find the contour from an external image like gallery
@@ -91,7 +93,6 @@ class DocumentScannerController {
   /// then save the document
   Future<void> cropPhoto() async {
     _appBloc.add(AppPhotoCropped());
-    // Go directly to save after crop
     _appBloc.add(AppStartedSavingDocument());
   }
 
@@ -101,8 +102,28 @@ class DocumentScannerController {
     _appBloc.add(AppStartedSavingDocument());
   }
 
-  /// Dispose the [AppBloc]
-  void dispose() {
+  /// Set the camera flash mode
+  Future<void> setFlashMode(FlashMode mode) async {
+    _appBloc.add(AppFlashModeChanged(mode));
+  }
+
+  /// Toggle flash between torch and off
+  Future<void> toggleFlash() async {
+    final currentMode = _appBloc.state.flashMode;
+    final newMode = currentMode == FlashMode.torch 
+        ? FlashMode.off 
+        : FlashMode.torch;
+    await setFlashMode(newMode);
+  }
+
+  /// Get the current flash mode
+  FlashMode getFlashMode() {
+    return _appBloc.state.flashMode;
+  }
+
+  /// Dispose the [AppBloc] and clean up resources
+  Future<void> dispose() async {
+    await setFlashMode(FlashMode.off);
     _appBloc.close();
   }
 }

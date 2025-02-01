@@ -53,6 +53,7 @@ class AppState extends Equatable {
     this.contourInitial,
     this.pictureCropped,
     this.statusSavePhotoDocument = AppStatus.initial,
+    this.flashMode = FlashMode.off,
   });
 
   /// Initial state
@@ -87,6 +88,9 @@ class AppState extends Equatable {
   /// Status when the photo was saved
   final AppStatus statusSavePhotoDocument;
 
+  /// Current flash mode
+  final FlashMode flashMode;
+
   @override
   List<Object?> get props => [
         currentPage,
@@ -98,6 +102,7 @@ class AppState extends Equatable {
         contourInitial,
         pictureCropped,
         statusSavePhotoDocument,
+        flashMode,
       ];
 
   /// Creates a copy of this state but with the given fields replaced with
@@ -112,6 +117,7 @@ class AppState extends Equatable {
     Object? contourInitial = valueNull,
     Uint8List? pictureCropped,
     AppStatus? statusSavePhotoDocument,
+    FlashMode? flashMode,
   }) {
     return AppState(
       currentPage: currentPage ?? this.currentPage,
@@ -126,6 +132,7 @@ class AppState extends Equatable {
       pictureCropped: pictureCropped ?? this.pictureCropped,
       statusSavePhotoDocument:
           statusSavePhotoDocument ?? this.statusSavePhotoDocument,
+      flashMode: flashMode ?? this.flashMode,
     );
   }
 }
