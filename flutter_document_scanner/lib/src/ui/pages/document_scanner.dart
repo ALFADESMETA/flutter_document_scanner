@@ -1,10 +1,4 @@
-// Copyright (c) 2021, Christian Betancourt
-// https://github.com/criistian14
-//
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file or at
-// https://opensource.org/licenses/MIT.
-
+import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,19 +7,14 @@ import 'package:flutter_document_scanner/src/bloc/app/app_bloc.dart';
 import 'package:flutter_document_scanner/src/bloc/app/app_state.dart';
 import 'package:flutter_document_scanner/src/document_scanner_controller.dart';
 import 'package:flutter_document_scanner/src/ui/pages/crop_photo_document_page.dart';
-import 'package:flutter_document_scanner/src/ui/pages/edit_document_photo_page.dart';
 import 'package:flutter_document_scanner/src/ui/pages/take_photo_document_page.dart';
 import 'package:flutter_document_scanner/src/utils/crop_photo_document_style.dart';
 import 'package:flutter_document_scanner/src/utils/dialogs.dart';
-import 'package:flutter_document_scanner/src/utils/edit_photo_document_style.dart';
 import 'package:flutter_document_scanner/src/utils/general_styles.dart';
-import 'package:flutter_document_scanner/src/utils/model_utils.dart';
 import 'package:flutter_document_scanner/src/utils/take_photo_document_style.dart';
 
-/// This class is the main page of the application
+/// This class is the main page of the document scanner
 class DocumentScanner extends StatelessWidget {
-  /// Create a main page with properties and methods
-  /// to manage the document scanner.
   const DocumentScanner({
     super.key,
     this.controller,
@@ -35,52 +24,38 @@ class DocumentScanner extends StatelessWidget {
     this.resolutionCamera = ResolutionPreset.high,
     this.takePhotoDocumentStyle = const TakePhotoDocumentStyle(),
     this.cropPhotoDocumentStyle = const CropPhotoDocumentStyle(),
-    this.editPhotoDocumentStyle = const EditPhotoDocumentStyle(),
     required this.onSave,
   });
 
-  /// Controller to execute the different functionalities
-  /// using the [DocumentScannerController]
+  /// Controller for the document scanner
   final DocumentScannerController? controller;
 
-  /// [generalStyles] is the [GeneralStyles] that will be used to style the
-  /// [DocumentScanner] widget.
+  /// General styles for the scanner
   final GeneralStyles generalStyles;
 
-  /// To change the animation performed when switching between screens
-  /// by using the [AnimatedSwitcherTransitionBuilder]
+  /// Custom page transition builder
   final AnimatedSwitcherTransitionBuilder? pageTransitionBuilder;
 
-  /// Camera library [CameraLensDirection]
+  /// Initial camera lens direction
   final CameraLensDirection initialCameraLensDirection;
 
-  /// Camera library [ResolutionPreset]
+  /// Camera resolution preset
   final ResolutionPreset resolutionCamera;
 
-  /// It is used to change the style of the [TakePhotoDocumentPage] page
-  /// using the [TakePhotoDocumentStyle] class.
+  /// Styles for the take photo page
   final TakePhotoDocumentStyle takePhotoDocumentStyle;
 
-  /// It is used to change the style of the [CropPhotoDocumentPage] page
-  /// using the [CropPhotoDocumentStyle] class.
+  /// Styles for the crop photo page
   final CropPhotoDocumentStyle cropPhotoDocumentStyle;
 
-  /// It is used to change the style of the [EditDocumentPhotoPage] page
-  /// using the [EditPhotoDocumentStyle] class.
-  final EditPhotoDocumentStyle editPhotoDocumentStyle;
-
-  /// After performing the whole process of capturing the document
-  /// It will return it as [Uint8List].
-  final OnSave onSave;
+  /// Callback when document is scanned
+  final Function(Uint8List) onSave;
 
   @override
   Widget build(BuildContext context) {
     final Dialogs dialogs = Dialogs();
-
-    DocumentScannerController _controller = DocumentScannerController();
-    if (controller != null) {
-      _controller = controller!;
-    }
+    final DocumentScannerController _controller = 
+        controller ?? DocumentScannerController();
 
     return BlocProvider(
       create: (BuildContext context) => _controller.bloc,
@@ -88,7 +63,7 @@ class DocumentScanner extends StatelessWidget {
         create: (context) => _controller,
         child: MultiBlocListener(
           listeners: [
-            // ? Show default dialogs in Take Photo
+            // Show default dialogs in Take Photo
             BlocListener<AppBloc, AppState>(
               listenWhen: (previous, current) =>
                   current.statusTakePhotoPage != previous.statusTakePhotoPage,
@@ -108,7 +83,7 @@ class DocumentScanner extends StatelessWidget {
               },
             ),
 
-            // ? Show default dialogs in Crop Photo
+            // Show default dialogs in Crop Photo
             BlocListener<AppBloc, AppState>(
               listenWhen: (previous, current) =>
                   current.statusCropPhoto != previous.statusCropPhoto,
@@ -128,27 +103,7 @@ class DocumentScanner extends StatelessWidget {
               },
             ),
 
-            // ? Show default dialogs in Edit Photo
-            BlocListener<AppBloc, AppState>(
-              listenWhen: (previous, current) =>
-                  current.statusEditPhoto != previous.statusEditPhoto,
-              listener: (context, state) {
-                if (generalStyles.hideDefaultDialogs) return;
-
-                if (state.statusEditPhoto == AppStatus.loading) {
-                  dialogs.defaultDialog(
-                    context,
-                    generalStyles.messageEditingPicture,
-                  );
-                }
-
-                if (state.statusEditPhoto == AppStatus.success) {
-                  Navigator.pop(context);
-                }
-              },
-            ),
-
-            // ? Show default dialogs in Save Photo Document
+            // Show default dialogs in Save Photo Document
             BlocListener<AppBloc, AppState>(
               listenWhen: (previous, current) =>
                   current.statusSavePhotoDocument !=
@@ -176,7 +131,6 @@ class DocumentScanner extends StatelessWidget {
               generalStyles: generalStyles,
               takePhotoDocumentStyle: takePhotoDocumentStyle,
               cropPhotoDocumentStyle: cropPhotoDocumentStyle,
-              editPhotoDocumentStyle: editPhotoDocumentStyle,
               onSave: onSave,
               initialCameraLensDirection: initialCameraLensDirection,
               resolutionCamera: resolutionCamera,
@@ -194,7 +148,6 @@ class _View extends StatelessWidget {
     required this.generalStyles,
     required this.takePhotoDocumentStyle,
     required this.cropPhotoDocumentStyle,
-    required this.editPhotoDocumentStyle,
     required this.onSave,
     required this.initialCameraLensDirection,
     required this.resolutionCamera,
@@ -204,8 +157,7 @@ class _View extends StatelessWidget {
   final GeneralStyles generalStyles;
   final TakePhotoDocumentStyle takePhotoDocumentStyle;
   final CropPhotoDocumentStyle cropPhotoDocumentStyle;
-  final EditPhotoDocumentStyle editPhotoDocumentStyle;
-  final OnSave onSave;
+  final Function(Uint8List) onSave;
   final CameraLensDirection initialCameraLensDirection;
   final ResolutionPreset resolutionCamera;
 
@@ -228,23 +180,15 @@ class _View extends StatelessWidget {
                 initialCameraLensDirection: initialCameraLensDirection,
                 resolutionCamera: resolutionCamera,
               );
-
-              break;
+            } else {
+              page = generalStyles.widgetInsteadOfCameraPreview ??
+                  const SizedBox.shrink();
             }
-
-            page = generalStyles.widgetInsteadOfCameraPreview ??
-                const SizedBox.shrink();
             break;
 
           case AppPages.cropPhoto:
             page = CropPhotoDocumentPage(
               cropPhotoDocumentStyle: cropPhotoDocumentStyle,
-            );
-            break;
-
-          case AppPages.editDocument:
-            page = EditDocumentPhotoPage(
-              editPhotoDocumentStyle: editPhotoDocumentStyle,
               onSave: onSave,
             );
             break;
@@ -257,12 +201,10 @@ class _View extends StatelessWidget {
                 const begin = Offset(-1, 0);
                 const end = Offset.zero;
                 final tween = Tween(begin: begin, end: end);
-
                 final curvedAnimation = CurvedAnimation(
                   parent: animation,
                   curve: Curves.easeOutCubic,
                 );
-
                 return SlideTransition(
                   position: tween.animate(curvedAnimation),
                   child: child,

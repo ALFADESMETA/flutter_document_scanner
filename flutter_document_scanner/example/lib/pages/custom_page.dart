@@ -28,7 +28,6 @@ class _CustomPageState extends State<CustomPage> {
           hideDefaultBottomNavigation: true,
           messageTakingPicture: 'Taking picture of document',
           messageCroppingPicture: 'Cropping picture of document',
-          messageEditingPicture: 'Editing picture of document',
           messageSavingPicture: 'Saving picture of document',
           baseColor: Colors.teal,
         ),
@@ -88,9 +87,6 @@ class _CustomPageState extends State<CustomPage> {
         cropPhotoDocumentStyle: CropPhotoDocumentStyle(
           top: MediaQuery.of(context).padding.top,
           maskColor: Colors.teal.withOpacity(0.2),
-        ),
-        editPhotoDocumentStyle: EditPhotoDocumentStyle(
-          top: MediaQuery.of(context).padding.top,
         ),
         resolutionCamera: ResolutionPreset.ultraHigh,
         pageTransitionBuilder: (child, animation) {

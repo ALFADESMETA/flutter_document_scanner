@@ -12,7 +12,6 @@ import 'package:bloc/bloc.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_document_scanner/src/bloc/app/app.dart';
 import 'package:flutter_document_scanner/src/bloc/crop/crop.dart';
-import 'package:flutter_document_scanner/src/bloc/edit/edit.dart';
 import 'package:flutter_document_scanner/src/document_scanner_controller.dart';
 import 'package:flutter_document_scanner/src/utils/image_utils.dart';
 import 'package:flutter_document_scanner_platform_interface/flutter_document_scanner_platform_interface.dart';
@@ -31,8 +30,6 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     on<AppPageChanged>(_pageChanged);
     on<AppPhotoCropped>(_photoCropped);
     on<AppLoadCroppedPhoto>(_loadCroppedPhoto);
-    on<AppFilterApplied>(_filterApplied);
-    on<AppNewEditedImageLoaded>(_newEditedImageLoaded);
     on<AppStartedSavingDocument>(_startedSavingDocument);
     on<AppDocumentSaved>(_documentSaved);
   }
@@ -99,7 +96,6 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     );
 
     if (_cameraController == null) {
-      // TODO(bloc): add validation and error handling
       return;
     }
 
@@ -176,17 +172,6 @@ class AppBloc extends Bloc<AppEvent, AppState> {
         emit(
           state.copyWith(
             currentPage: event.newPage,
-            currentFilterType: FilterType.natural,
-          ),
-        );
-        break;
-
-      case AppPages.editDocument:
-        emit(
-          state.copyWith(
-            currentPage: event.newPage,
-            statusEditPhoto: AppStatus.initial,
-            statusSavePhotoDocument: AppStatus.initial,
           ),
         );
         break;
@@ -194,8 +179,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   }
 
   /// It will change the state and
-  /// execute the event [CropPhotoByAreaCropped] to crop the image that is in
-  /// the [CropBloc].
+  /// execute the event [CropPhotoByAreaCropped] to crop the image
   Future<void> _photoCropped(
     AppPhotoCropped event,
     Emitter<AppState> emit,
@@ -207,7 +191,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     );
   }
 
-  /// It will change the state and then change page to [AppPages.editDocument]
+  /// It will change the state after loading the cropped photo
   Future<void> _loadCroppedPhoto(
     AppLoadCroppedPhoto event,
     Emitter<AppState> emit,
@@ -220,45 +204,12 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       ),
     );
 
-    emit(
-      state.copyWith(
-        currentPage: AppPages.editDocument,
-      ),
-    );
+    // Start saving immediately after crop
+    add(AppStartedSavingDocument());
   }
 
   /// It will change the state and
-  /// execute the event [EditFilterChanged] to crop the image that is
-  /// in the [EditBloc].
-  Future<void> _filterApplied(
-    AppFilterApplied event,
-    Emitter<AppState> emit,
-  ) async {
-    if (event.filter == state.currentFilterType) return;
-
-    emit(
-      state.copyWith(
-        currentFilterType: event.filter,
-        statusEditPhoto: AppStatus.loading,
-      ),
-    );
-  }
-
-  /// It is called when the image filter changes
-  Future<void> _newEditedImageLoaded(
-    AppNewEditedImageLoaded event,
-    Emitter<AppState> emit,
-  ) async {
-    emit(
-      state.copyWith(
-        statusEditPhoto:
-            event.isSuccess ? AppStatus.success : AppStatus.failure,
-      ),
-    );
-  }
-
-  /// It will change the state and
-  /// validate if image edited is valid.
+  /// validate if image is valid for saving
   Future<void> _startedSavingDocument(
     AppStartedSavingDocument event,
     Emitter<AppState> emit,

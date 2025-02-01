@@ -36,19 +36,7 @@ class DocumentScannerController {
     return _appBloc.stream.map((data) => data.statusCropPhoto).distinct();
   }
 
-  /// Stream [AppStatus] to know the status while editing the document
-  /// with filters
-  Stream<AppStatus> get statusEditPhoto {
-    return _appBloc.stream.map((data) => data.statusEditPhoto).distinct();
-  }
-
-  /// Stream [FilterType] the current filtering of the document
-  Stream<FilterType> get currentFilterType {
-    return _appBloc.stream.map((data) => data.currentFilterType).distinct();
-  }
-
   /// Stream [AppStatus] to know the status while saving the document
-  /// with all filters and cropping area
   Stream<AppStatus> get statusSavePhotoDocument {
     return _appBloc.stream
         .map((data) => data.statusSavePhotoDocument)
@@ -67,10 +55,8 @@ class DocumentScannerController {
   Uint8List? get pictureCropped => _appBloc.state.pictureCropped;
 
   /// Taking the photo
-  ///
-  /// Then find  the contour with the largest area only when
+  /// Then find the contour with the largest area only when
   /// it exceeds [minContourArea]
-  ///
   /// [minContourArea] is default 80000.0
   Future<void> takePhoto({
     double? minContourArea,
@@ -83,7 +69,6 @@ class DocumentScannerController {
   }
 
   /// Find the contour from an external image like gallery
-  ///
   /// [minContourArea] is default 80000.0
   Future<void> findContoursFromExternalImage({
     required File image,
@@ -103,17 +88,14 @@ class DocumentScannerController {
   }
 
   /// Cutting the photo and adjusting the perspective
-  /// then change page to [AppPages.editDocument]
+  /// then save the document
   Future<void> cropPhoto() async {
     _appBloc.add(AppPhotoCropped());
+    // Go directly to save after crop
+    _appBloc.add(AppStartedSavingDocument());
   }
 
-  /// Apply [FilterType] using OpenCV
-  Future<void> applyFilter(FilterType type) async {
-    _appBloc.add(AppFilterApplied(filter: type));
-  }
-
-  /// Save the document with filter and cropping area
+  /// Save the document with cropping area
   /// It will return it as [Uint8List] in [DocumentScanner]
   Future<void> savePhotoDocument() async {
     _appBloc.add(AppStartedSavingDocument());

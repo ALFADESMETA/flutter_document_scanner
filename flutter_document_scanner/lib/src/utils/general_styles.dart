@@ -14,10 +14,9 @@ class GeneralStyles {
   const GeneralStyles({
     this.hideDefaultBottomNavigation = false,
     this.hideDefaultDialogs = false,
-    this.baseColor = Colors.white,
+    this.baseColor = Colors.green,
     this.messageTakingPicture = 'Taking picture',
     this.messageCroppingPicture = 'Cropping picture',
-    this.messageEditingPicture = 'Editing picture',
     this.messageSavingPicture = 'Saving picture',
     this.showCameraPreview = true,
     this.widgetInsteadOfCameraPreview,
@@ -39,10 +38,6 @@ class GeneralStyles {
   /// Message to be displayed when cropping picture
   /// (only if [hideDefaultDialogs] is false)
   final String messageCroppingPicture;
-
-  /// Message to be displayed when editing picture
-  /// (only if [hideDefaultDialogs] is false)
-  final String messageEditingPicture;
 
   /// Message to be displayed when saving picture
   /// (only if [hideDefaultDialogs] is false)

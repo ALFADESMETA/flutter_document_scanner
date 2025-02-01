@@ -12,11 +12,9 @@ import 'package:camera/camera.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_document_scanner/src/models/area.dart';
 import 'package:flutter_document_scanner/src/ui/pages/crop_photo_document_page.dart';
-import 'package:flutter_document_scanner/src/ui/pages/edit_document_photo_page.dart';
 import 'package:flutter_document_scanner/src/ui/pages/take_photo_document_page.dart';
 import 'package:flutter_document_scanner/src/utils/image_utils.dart';
 import 'package:flutter_document_scanner/src/utils/model_utils.dart';
-import 'package:flutter_document_scanner_platform_interface/flutter_document_scanner_platform_interface.dart';
 
 /// Status of the app
 enum AppStatus {
@@ -40,9 +38,6 @@ enum AppPages {
 
   /// Reference to the page [CropPhotoDocumentPage]
   cropPhoto,
-
-  /// Reference to the page [EditDocumentPhotoPage]
-  editDocument,
 }
 
 /// Controls the status general of the app
@@ -57,8 +52,6 @@ class AppState extends Equatable {
     this.statusCropPhoto = AppStatus.initial,
     this.contourInitial,
     this.pictureCropped,
-    this.statusEditPhoto = AppStatus.initial,
-    this.currentFilterType = FilterType.natural,
     this.statusSavePhotoDocument = AppStatus.initial,
   });
 
@@ -91,12 +84,6 @@ class AppState extends Equatable {
   /// Picture that was cropped
   final Uint8List? pictureCropped;
 
-  /// Status when the photo was edited
-  final AppStatus statusEditPhoto;
-
-  /// Current filter type
-  final FilterType currentFilterType;
-
   /// Status when the photo was saved
   final AppStatus statusSavePhotoDocument;
 
@@ -110,8 +97,6 @@ class AppState extends Equatable {
         statusCropPhoto,
         contourInitial,
         pictureCropped,
-        statusEditPhoto,
-        currentFilterType,
         statusSavePhotoDocument,
       ];
 
@@ -126,8 +111,6 @@ class AppState extends Equatable {
     AppStatus? statusCropPhoto,
     Object? contourInitial = valueNull,
     Uint8List? pictureCropped,
-    AppStatus? statusEditPhoto,
-    FilterType? currentFilterType,
     AppStatus? statusSavePhotoDocument,
   }) {
     return AppState(
@@ -141,8 +124,6 @@ class AppState extends Equatable {
           ? this.contourInitial
           : contourInitial as Area?,
       pictureCropped: pictureCropped ?? this.pictureCropped,
-      statusEditPhoto: statusEditPhoto ?? this.statusEditPhoto,
-      currentFilterType: currentFilterType ?? this.currentFilterType,
       statusSavePhotoDocument:
           statusSavePhotoDocument ?? this.statusSavePhotoDocument,
     );

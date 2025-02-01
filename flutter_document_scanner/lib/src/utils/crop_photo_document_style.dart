@@ -17,7 +17,7 @@ class CropPhotoDocumentStyle {
   /// Create a instance of [CropPhotoDocumentStyle].
   const CropPhotoDocumentStyle({
     this.hideAppBarDefault = false,
-    this.textButtonSave = 'CROP',
+    this.textButtonSave = 'Scan',
     this.children,
     this.top = 0,
     this.bottom = 0,
