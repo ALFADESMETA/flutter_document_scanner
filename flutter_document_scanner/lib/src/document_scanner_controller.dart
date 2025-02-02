@@ -60,6 +60,25 @@ class DocumentScannerController {
   /// Will return the picture cropped on the [CropPhotoDocumentPage]
   Uint8List? get pictureCropped => _appBloc.state.pictureCropped;
 
+  /// Will return the current photo data, either cropped or original
+  /// Returns the cropped image if available, otherwise returns the original image bytes
+  Uint8List? get photo {
+    // First try to get the cropped image
+    if (_appBloc.state.pictureCropped != null) {
+      return _appBloc.state.pictureCropped;
+    }
+    // If no cropped image, try to get the original image
+    if (_appBloc.state.pictureInitial != null) {
+      try {
+        return _appBloc.state.pictureInitial!.readAsBytesSync();
+      } catch (e) {
+        print('Error reading original photo bytes: $e');
+        return null;
+      }
+    }
+    return null;
+  }
+
   /// Taking the photo
   /// Then find the contour with the largest area only when
   /// it exceeds [minContourArea]
@@ -96,10 +115,16 @@ class DocumentScannerController {
     _appBloc.add(AppStartedSavingDocument());
   }
 
-  /// Save the document with cropping area
+  /// Save the document with cropping area if available, otherwise saves the original photo
   /// It will return it as [Uint8List] in [DocumentScanner]
+  /// The saved document can be accessed via the [photo] getter
   Future<void> savePhotoDocument() async {
-    _appBloc.add(AppStartedSavingDocument());
+    if (_appBloc.state.pictureCropped != null || _appBloc.state.pictureInitial != null) {
+      _appBloc.add(AppStartedSavingDocument());
+      _appBloc.add(AppDocumentSaved(isSuccess: true));
+    } else {
+      _appBloc.add(AppDocumentSaved(isSuccess: false));
+    }
   }
 
   /// Set the camera flash mode

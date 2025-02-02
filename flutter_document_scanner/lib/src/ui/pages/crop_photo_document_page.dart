@@ -134,9 +134,19 @@ class _CropView extends StatelessWidget {
           listenWhen: (previous, current) =>
               current.statusSavePhotoDocument != previous.statusSavePhotoDocument,
           listener: (context, state) {
-            if (state.statusSavePhotoDocument == AppStatus.success &&
-                state.pictureCropped != null) {
-              onSave(state.pictureCropped!);
+            if (state.statusSavePhotoDocument == AppStatus.success) {
+              // Try to get cropped image first, fall back to original if needed
+              final imageData = state.pictureCropped ?? 
+                  (state.pictureInitial != null ? state.pictureInitial!.readAsBytesSync() : null);
+              
+              if (imageData != null) {
+                print('Saving image with size: ${imageData.length} bytes');
+                onSave(imageData);
+              } else {
+                print('No image data available for saving');
+              }
+            } else if (state.statusSavePhotoDocument == AppStatus.failure) {
+              print('Failed to save document');
             }
           },
         ),

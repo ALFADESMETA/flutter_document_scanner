@@ -78,7 +78,9 @@ class DocumentScanner extends StatelessWidget {
                 }
 
                 if (state.statusTakePhotoPage == AppStatus.success) {
-                  Navigator.pop(context);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                  }
                 }
               },
             ),
@@ -98,7 +100,9 @@ class DocumentScanner extends StatelessWidget {
                 }
 
                 if (state.statusCropPhoto == AppStatus.success) {
-                  Navigator.pop(context);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                  }
                 }
               },
             ),
@@ -119,7 +123,28 @@ class DocumentScanner extends StatelessWidget {
                 }
 
                 if (state.statusSavePhotoDocument == AppStatus.success) {
-                  Navigator.pop(context);
+                  try {
+                    final imageData = state.pictureCropped ?? 
+                        (state.pictureInitial?.readAsBytesSync());
+                        
+                    if (imageData != null) {
+                      onSave(imageData);
+                    }
+                    
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                    }
+                  } catch (e) {
+                    print('Error saving document: $e');
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Failed to save document'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
                 }
               },
             ),

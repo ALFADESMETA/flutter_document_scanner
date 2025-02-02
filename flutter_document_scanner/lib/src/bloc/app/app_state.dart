@@ -91,6 +91,32 @@ class AppState extends Equatable {
   /// Current flash mode
   final FlashMode flashMode;
 
+  /// Returns true if there is either a cropped or initial picture available
+  bool get hasImage => pictureCropped != null || pictureInitial != null;
+
+  /// Gets the final image bytes, preferring cropped over initial
+  Uint8List? get finalImageBytes {
+    if (pictureCropped != null) {
+      return pictureCropped;
+    }
+    if (pictureInitial != null) {
+      try {
+        return pictureInitial!.readAsBytesSync();
+      } catch (e) {
+        print('Error reading initial picture bytes: $e');
+        return null;
+      }
+    }
+    return null;
+  }
+
+  /// Returns true if state indicates processing is in progress
+  bool get isProcessing =>
+      statusCamera == AppStatus.loading ||
+      statusTakePhotoPage == AppStatus.loading ||
+      statusCropPhoto == AppStatus.loading ||
+      statusSavePhotoDocument == AppStatus.loading;
+
   @override
   List<Object?> get props => [
         currentPage,

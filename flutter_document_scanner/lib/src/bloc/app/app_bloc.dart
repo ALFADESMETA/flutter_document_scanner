@@ -198,6 +198,16 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     Emitter<AppState> emit,
   ) async {
     emit(state.copyWith(statusSavePhotoDocument: AppStatus.loading));
+    
+    try {
+      if (state.pictureCropped != null || state.pictureInitial != null) {
+        add(AppDocumentSaved(isSuccess: true));
+      } else {
+        add(AppDocumentSaved(isSuccess: false));
+      }
+    } catch (e) {
+      add(AppDocumentSaved(isSuccess: false));
+    }
   }
 
   /// Handle document saving completion
